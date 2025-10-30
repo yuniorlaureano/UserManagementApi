@@ -1,66 +1,61 @@
-@UserManagementAPI_HostAddress = http://localhost:5024
+@host = http://localhost:5024
+@adminAuth = Basic YWRtaW46cGFzc3dvcmQ=
+@userAuth = Basic dXNlcjpzZWNyZXQ=
 
 ### UserManagementAPI — CRUD + Basic auth tests
 #
 # Notes:
-# - The API protects /users endpoints with a simple Basic auth middleware.
-# - Example credentials included below (for local testing):
-#     - admin:password  (Base64: YWRtaW46cGFzc3dvcmQ=)
-#     - user:secret     (Base64: dXNlcjpzZWNyZXQ=)
-# - If you're using the VS Code REST Client extension, run the requests in order.
+# - The API protects /users endpoints with Basic auth middleware
+# - Example credentials:
+#     admin:password
+#     user:secret
 
 ### 1) List users (no auth) — expect 401 Unauthorized
-GET http://localhost:5000/users
+GET {{host}}/users
 Accept: application/json
 
 ### 2) List users (with Basic auth) — expect 200 OK
-GET http://localhost:5000/users
-Authorization: Basic YWRtaW46cGFzc3dvcmQ=
+GET {{host}}/users
+Authorization: {{adminAuth}}
 Accept: application/json
 
 ### 3) Create a user (authenticated) — expect 201 Created
-POST http://localhost:5000/users
+# @name createUser
+POST {{host}}/users
 Content-Type: application/json
-Authorization: Basic YWRtaW46cGFzc3dvcmQ=
+Authorization: {{adminAuth}}
 
 {
-	"firstName": "Sam",
-	"lastName": "Lee",
-	"age": 28
+    "firstName": "Sam",
+    "lastName": "Lee",
+    "age": 28
 }
 
-# Note: copy the "id" value from the Create response JSON and set it into the
-# variable `createdId` below (replace the placeholder) before running the
-# subsequent requests.
+###
 
-> {%
-// Extract the created user's id from the POST response and store it as a global variable
-// This handler runs in the REST Client extension. After running the Create request
-// subsequent requests can use {{createdId}}.
-client.global.set("createdId", JSON.parse(responseBody).id);
-%}
+@id = {{createUser.response.body.$.id}}
 
 ### 4) Get the created user by id (authenticated)
-GET http://localhost:5000/users/{{createdId}}
-Authorization: Basic YWRtaW46cGFzc3dvcmQ=
+GET {{host}}/users/{{id}}
+Authorization: {{adminAuth}}
 Accept: application/json
 
 ### 5) Update the created user (authenticated) — expect 204 No Content
-PUT http://localhost:5000/users/{{createdId}}
+PUT {{host}}/users/{{id}}
 Content-Type: application/json
-Authorization: Basic YWRtaW46cGFzc3dvcmQ=
+Authorization: {{adminAuth}}
 
 {
-	"firstName": "Samantha",
-	"lastName": "Lee",
-	"age": 29
+    "firstName": "Samantha",
+    "lastName": "Lee",
+    "age": 29
 }
 
 ### 6) Delete the created user (authenticated) — expect 204 No Content
-DELETE http://localhost:5000/users/{{createdId}}
-Authorization: Basic YWRtaW46cGFzc3dvcmQ=
+DELETE {{host}}/users/{{id}}
+Authorization: {{adminAuth}}
 
 ### 7) Verify deletion — Get should return 404 Not Found
-GET http://localhost:5000/users/{{createdId}}
-Authorization: Basic YWRtaW46cGFzc3dvcmQ=
+GET {{host}}/users/{{id}}
+Authorization: {{adminAuth}}
 Accept: application/json
